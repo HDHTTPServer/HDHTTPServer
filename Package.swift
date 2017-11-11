@@ -6,6 +6,9 @@ import PackageDescription
 let package = Package(
     name: "HDHTTPServer",
     products: [
+        .executable(
+            name: "HDHTTPServerRun",
+            targets: ["HDHTTPServerRun"]),
         .library(
             name: "HDHTTPServer",
             targets: ["HDHTTPServer"]),
@@ -17,6 +20,9 @@ let package = Package(
         .target(
             name: "HDHTTPServer",
             dependencies: ["Signals"]),
+        .target(
+            name: "HDHTTPServerRun",
+            dependencies: ["HDHTTPServer"]),
         .testTarget(
             name: "HDHTTPServerTests",
             dependencies: ["HDHTTPServer"]),
