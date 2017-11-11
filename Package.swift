@@ -12,12 +12,11 @@ let package = Package(
     ],
     dependencies: [
          .package(url: "git@github.com:IBM-Swift/BlueSignals.git", from: "0.9.50"),
-         .package(url: "git@github.com:swift-server/http.git", from: "0.1.0")
     ],
     targets: [
         .target(
             name: "HDHTTPServer",
-            dependencies: ["Signals", "HTTP"]),
+            dependencies: ["Signals"]),
         .testTarget(
             name: "HDHTTPServerTests",
             dependencies: ["HDHTTPServer"]),

@@ -1,4 +1,2 @@
 
-import HTTP
-
-public typealias HDHTTPServer = PoCSocketSimpleServer
+public struct HDHTTPServer { }
