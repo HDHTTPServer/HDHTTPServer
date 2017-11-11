@@ -18,8 +18,7 @@ public enum SSSocketError: Error {
 
 public class SSSocket {
     let socketfd: FileDescriptor
-
-    let listeningPort: Port
+    public let listeningPort: Port
 
     public init(fd: FileDescriptor, port: Port) {
         self.socketfd = fd
@@ -45,8 +44,6 @@ public class SSSocket {
     }
 
     func acceptClientConnection<Socket: ClientSocket>() throws -> Socket? {
-        var retVal = Socket()
-
         var maxRetryCount = 100
 
         var acceptFD: Int32 = -1
@@ -67,32 +64,6 @@ public class SSSocket {
         if acceptFD < 0 {
             throw SSSocketError.SocketOSError(errno: errno)
         }
-
-        retVal.isConnected = true
-        retVal.socketfd = acceptFD
-
-        return retVal
-    }
-
-    /// Sets the socket to Blocking or non-blocking mode.
-    ///
-    /// - Parameter mode: true for blocking, false for nonBlocking
-    /// - Returns: `fcntl(2)` flags
-    /// - Throws: SSSocketError if `fcntl` fails
-    @discardableResult func setBlocking(mode: Bool) throws -> Int32 {
-        let flags = fcntl(self.socketfd, F_GETFL)
-        if flags < 0 {
-            //Failed
-            throw SSSocketError.SocketOSError(errno: errno)
-        }
-
-        let newFlags = mode ? flags & ~O_NONBLOCK : flags | O_NONBLOCK
-
-        let result = fcntl(self.socketfd, F_SETFL, newFlags)
-        if result < 0 {
-            //Failed
-            throw SSSocketError.SocketOSError(errno: errno)
-        }
-        return result
+        return Socket(fd: acceptFD, isConnected: true)
     }
 }

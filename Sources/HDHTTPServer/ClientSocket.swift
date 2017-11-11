@@ -6,7 +6,5 @@
 //
 
 public protocol ClientSocket {
-    var socketfd: FileDescriptor { get set }
-    var isConnected: Bool { get set }
-    init()
+    init(fd: FileDescriptor, isConnected: Bool)
 }
