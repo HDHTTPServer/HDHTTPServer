@@ -15,7 +15,7 @@ public class Atomic<T> {
         self._value = value
     }
 
-    var value: T {
+    public var value: T {
         get {
             lock.wait()
             defer {
