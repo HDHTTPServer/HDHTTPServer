@@ -7,15 +7,6 @@
 
 import Dispatch
 
-public struct StreamingParser { }
-
-public class SocketConnectionListener {
-    var isOpen: Bool = false
-    func process() { }
-    func close() { }
-    func closeIfIdleSocket() { }
-}
-
 public struct HTTPRequest { }
 
 public struct HTTPResponseWriter { }
@@ -24,10 +15,10 @@ public struct HTTPBodyProcessing { }
 
 public typealias HTTPRequestHandler = (HTTPRequest, HTTPResponseWriter) -> HTTPBodyProcessing
 
-public class HDHTTPServer {
+public class HDHTTPServer<Manager: ClientSocketHandlerManager> {
     private let serverSocket: SSSocket
 
-    private var connectionListenerList: ConnectionListenerCollection
+    private var clientSocketHandlerManager: Manager
 
     /// Timer that cleans up idle sockets on expire
     private let pruneSocketTimer: DispatchSourceTimer = DispatchSource.makeTimerSource(queue: DispatchQueue(label: "pruneSocketTimer"))
@@ -36,9 +27,9 @@ public class HDHTTPServer {
         return Int(serverSocket.listeningPort)
     }
 
-    public init(serverSocket: SSSocket, connectionListerList: ConnectionListenerCollection) {
+    public init(serverSocket: SSSocket, clientSocketHandlerManager: Manager) {
         self.serverSocket = serverSocket
-        self.connectionListenerList = connectionListerList
+        self.clientSocketHandlerManager = clientSocketHandlerManager
     }
 
     private var queueMax: Int = 4
@@ -87,7 +78,7 @@ public class HDHTTPServer {
         }
 
         pruneSocketTimer.setEventHandler { [weak self] in
-            self?.connectionListenerList.prune()
+            self?.clientSocketHandlerManager.prune()
         }
         pruneSocketTimer.schedule(deadline: .now() + keepAliveTimeout,
                                   repeating: .seconds(Int(keepAliveTimeout)))
@@ -109,30 +100,25 @@ public class HDHTTPServer {
         var listenerCount = 0
         DispatchQueue.global().async {
             repeat {
-//                do {
-//                    let acceptedClientSocket = try self.serverSocket.acceptClientConnection()
-//                    guard let clientSocket = acceptedClientSocket else {
-//                        if self.isShuttingDown {
-//                            print("Received nil client socket - exiting accept loop")
-//                        }
-//                        break
-//                    }
-                    //                    let streamingParser = StreamingParser(handler: handler, connectionCounter: self, keepAliveTimeout: keepAliveTimeout)
-//                    let streamingParser = StreamingParser()
-//                    let readQueue = readQueues[listenerCount % self.queueMax]
-//                    let writeQueue = writeQueues[listenerCount % self.queueMax]
-                    //                    let listener = SocketConnectionListener(socket: clientSocket, parser: streamingParser, readQueue: readQueue, writeQueue: writeQueue, maxReadLength: maxReadLength)
-                    let listener = SocketConnectionListener()
+                do {
+                    let acceptedClientSocket: Manager.Handler.Socket? = try self.serverSocket.acceptClientConnection()
+                    guard let clientSocket = acceptedClientSocket else {
+                        if self.isShuttingDown {
+                            print("Received nil client socket - exiting accept loop")
+                        }
+                        break
+                    }
+                    let handler = Manager.Handler()
                     listenerCount += 1
                     acceptSemaphore.wait()
-                    acceptQueue.async { [weak listener] in
-                        listener?.process()
+                    acceptQueue.async { [weak handler] in
+                        handler?.handle(socket: clientSocket)
                         acceptSemaphore.signal()
                     }
-                    self.connectionListenerList.add(listener)
-//                } catch let error {
-//                    print("Error accepting client connection: \(error)")
-//                }
+                    self.clientSocketHandlerManager.add(handler: handler)
+                } catch let error {
+                    print("Error accepting client connection: \(error)")
+                }
             } while !self.isShuttingDown
         }
     }
@@ -140,18 +126,11 @@ public class HDHTTPServer {
     /// Stop the server and close the sockets
     public func stop() {
         isShuttingDown = true
-        connectionListenerList.closeAll()
+        clientSocketHandlerManager.closeAll()
     }
 
     /// Count the connections - can be used in XCTests
     public var connectionCount: Int {
-        return connectionListenerList.count
+        return clientSocketHandlerManager.count
     }
-}
-
-public protocol ConnectionListenerCollection {
-    func add(_ listener: SocketConnectionListener)
-    func closeAll()
-    func prune()
-    var count: Int { get }
 }
