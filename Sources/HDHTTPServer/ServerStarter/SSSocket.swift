@@ -20,6 +20,25 @@ public class SSSocket {
     let socketfd: FileDescriptor
     public let listeningPort: Port
 
+    public init?() {
+        let env = ProcessInfo().environment
+
+        guard let value = env["SERVER_STARTER_PORT"] else {
+            return nil
+        }
+
+        guard let port = Port(value.components(separatedBy: "=")[0]) else {
+            return nil
+        }
+
+        guard let fd = FileDescriptor(value.components(separatedBy: "=")[1]) else {
+            return nil
+        }
+
+        self.socketfd = fd
+        self.listeningPort = port
+    }
+
     public init(fd: FileDescriptor, port: Port) {
         self.socketfd = fd
         self.listeningPort = port
