@@ -7,14 +7,6 @@
 
 import Dispatch
 
-public struct Socket {
-    public var isListening: Bool = false
-    public var listeningPort: Int = 0
-    public func shutdownAndClose() { }
-    public func bindAndListen(on: Int) throws { }
-    public func acceptClientConnection() throws -> Socket? { return Socket() }
-}
-
 public struct StreamingParser { }
 
 public class SocketConnectionListener {
@@ -33,7 +25,7 @@ public struct HTTPBodyProcessing { }
 public typealias HTTPRequestHandler = (HTTPRequest, HTTPResponseWriter) -> HTTPBodyProcessing
 
 public class HDHTTPServer {
-    private let serverSocket: Socket
+    private let serverSocket: SSSocket
 
     private var connectionListenerList: ConnectionListenerCollection
 
@@ -44,7 +36,7 @@ public class HDHTTPServer {
         return Int(serverSocket.listeningPort)
     }
 
-    public init(serverSocket: Socket, connectionListerList: ConnectionListenerCollection) {
+    public init(serverSocket: SSSocket, connectionListerList: ConnectionListenerCollection) {
         self.serverSocket = serverSocket
         self.connectionListenerList = connectionListerList
     }
@@ -93,7 +85,6 @@ public class HDHTTPServer {
         if acceptCount > 0 {
             acceptMax = acceptCount
         }
-        try self.serverSocket.bindAndListen(on: port)
 
         pruneSocketTimer.setEventHandler { [weak self] in
             self?.connectionListenerList.prune()
@@ -142,7 +133,7 @@ public class HDHTTPServer {
 //                } catch let error {
 //                    print("Error accepting client connection: \(error)")
 //                }
-            } while !self.isShuttingDown && self.serverSocket.isListening
+            } while !self.isShuttingDown
         }
     }
 
@@ -150,7 +141,6 @@ public class HDHTTPServer {
     public func stop() {
         isShuttingDown = true
         connectionListenerList.closeAll()
-        serverSocket.shutdownAndClose()
     }
 
     /// Count the connections - can be used in XCTests
