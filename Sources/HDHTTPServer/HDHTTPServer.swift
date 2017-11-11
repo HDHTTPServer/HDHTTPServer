@@ -33,27 +33,27 @@ public struct HTTPBodyProcessing { }
 public typealias HTTPRequestHandler = (HTTPRequest, HTTPResponseWriter) -> HTTPBodyProcessing
 
 public class HDHTTPServer {
-    /// PoCSocket to listen on for connections
-    private let serverSocket: Socket = Socket()
+    private let serverSocket: Socket
 
-    /// Collection of listeners of sockets. Used to kill connections on timeout or shutdown
-    private var connectionListenerList = ConnectionListenerCollection()
+    private var connectionListenerList: ConnectionListenerCollection
 
     /// Timer that cleans up idle sockets on expire
     private let pruneSocketTimer: DispatchSourceTimer = DispatchSource.makeTimerSource(queue: DispatchQueue(label: "pruneSocketTimer"))
 
-    /// The port we're listening on. Used primarily to query a randomly assigned port during XCTests
     public var port: Int {
         return Int(serverSocket.listeningPort)
     }
 
-    /// Tuning parameter to set the number of queues
-    private var queueMax: Int = 4 //sensible default
-    /// Tuning parameter to set the number of sockets we can accept at one time
-    private var acceptMax: Int = 8 //sensible default
-    /// Used to stop `accept(2)`ing while shutdown in progress to avoid spurious logs
+    public init(serverSocket: Socket, connectionListerList: ConnectionListenerCollection) {
+        self.serverSocket = serverSocket
+        self.connectionListenerList = connectionListerList
+    }
+
+    private var queueMax: Int = 4
+    private var acceptMax: Int = 8
     private let _isShuttingDownLock = DispatchSemaphore(value: 1)
     private var _isShuttingDown: Bool = false
+
     var isShuttingDown: Bool {
         get {
             _isShuttingDownLock.wait()
@@ -98,13 +98,8 @@ public class HDHTTPServer {
         pruneSocketTimer.setEventHandler { [weak self] in
             self?.connectionListenerList.prune()
         }
-        #if swift(>=4.0)
-            pruneSocketTimer.schedule(deadline: .now() + keepAliveTimeout,
-                                      repeating: .seconds(Int(keepAliveTimeout)))
-        #else
-            pruneSocketTimer.scheduleRepeating(deadline: .now() + keepAliveTimeout,
-            interval: .seconds(Int(keepAliveTimeout)))
-        #endif
+        pruneSocketTimer.schedule(deadline: .now() + keepAliveTimeout,
+                                  repeating: .seconds(Int(keepAliveTimeout)))
         pruneSocketTimer.resume()
 
         var readQueues = [DispatchQueue]()
@@ -164,51 +159,9 @@ public class HDHTTPServer {
     }
 }
 
-/// Collection of ConnectionListeners, wrapped with weak references, so the memory can be freed when the socket closes
-class ConnectionListenerCollection {
-    /// Weak wrapper class
-    class WeakConnectionListener<T: AnyObject> {
-        weak var value: T?
-        init (_ value: T) {
-            self.value = value
-        }
-    }
-
-    /// Lock around access to storage
-    private let lock = DispatchSemaphore(value: 1)
-
-    /// Storage for weak connection listeners
-    private var storage = [WeakConnectionListener<SocketConnectionListener>]()
-
-    /// Add a new connection to the collection
-    ///
-    /// - Parameter listener: socket manager object
-    func add(_ listener: SocketConnectionListener) {
-        lock.wait()
-        storage.append(WeakConnectionListener(listener))
-        lock.signal()
-    }
-
-    /// Used when shutting down the server to close all connections
-    func closeAll() {
-        lock.wait()
-        storage.filter { $0.value != nil }.forEach { $0.value?.close() }
-        lock.signal()
-    }
-
-    /// Close any idle sockets and remove any weak pointers to closed (and freed) sockets from the collection
-    func prune() {
-        lock.wait()
-        storage.filter { nil != $0.value }.forEach { $0.value?.closeIfIdleSocket() }
-        storage = storage.filter { $0.value != nil }.filter { $0.value?.isOpen ?? false }
-        lock.signal()
-    }
-
-    /// Count of collections
-    var count: Int {
-        lock.wait()
-        let count = storage.filter { $0.value != nil }.count
-        lock.signal()
-        return count
-    }
+public protocol ConnectionListenerCollection {
+    func add(_ listener: SocketConnectionListener)
+    func closeAll()
+    func prune()
+    var count: Int { get }
 }
