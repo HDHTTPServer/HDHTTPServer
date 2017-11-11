@@ -1,5 +1,8 @@
 import Foundation
+import HDHTTPServer
+import HTTP
 
-print("hello!")
+let socket = SSSocket()!
+print("port: \(socket.listeningPort)")
 
 CFRunLoopRun()
