@@ -8,7 +8,7 @@
 public protocol ClientSocketHandler: class {
     associatedtype Socket: ClientSocket
     var isOpen: Bool { get }
-    func handle(socket: Socket)
+    func handle(socket: Socket) throws
     func close()
     func closeIfIdleSocket()
     init()
