@@ -14,3 +14,16 @@ public protocol ClientSocketHandlerManager {
     func closeAll()
     func prune()
 }
+
+//FIXME: conform to `ClientSocketHandlerManager`
+final class AnyClientSocketHandlerManager {
+    private let _closeAll: () -> Void
+
+    init<Manager: ClientSocketHandlerManager>(_ manager: Manager) {
+        self._closeAll = manager.closeAll
+    }
+
+    func closeAll() {
+        self._closeAll()
+    }
+}
