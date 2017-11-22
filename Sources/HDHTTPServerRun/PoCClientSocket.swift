@@ -24,6 +24,21 @@ class PoCClientSocket: ClientSocket {
         self.isConnected = isConnected
     }
 
+    var scheme: String {
+        return "http"
+    }
+
+    var hostname: String {
+        return "0.0.0.0"
+    }
+    var port: Int32 {
+        return listeningPort
+    }
+
+    var address: String {
+        return "" //FIXME
+    }
+
     var socketfd: Int32 = -1
     var listeningPort: Int32 = -1
     private(set) var isConnected = false

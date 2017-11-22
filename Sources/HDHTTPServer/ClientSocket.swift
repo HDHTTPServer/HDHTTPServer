@@ -6,5 +6,9 @@
 //
 
 public protocol ClientSocket {
-    init(fd: FileDescriptor, isConnected: Bool)
+    associatedtype Address
+    var scheme: String { get }
+    var hostname: String { get }
+    var port: Port { get }
+    var address: Address { get }
 }
