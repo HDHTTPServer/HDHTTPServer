@@ -22,8 +22,8 @@ public class HDHTTPServer<SocketHandlerManager: ClientSocketHandlerManager> {
     /// Timer that cleans up idle sockets on expire
     private let pruneSocketTimer: DispatchSourceTimer = DispatchSource.makeTimerSource(queue: DispatchQueue(label: "pruneSocketTimer"))
 
-    public var port: Int {
-        return Int(serverSocket.listeningPort)
+    public var port: UInt16 {
+        return UInt16(serverSocket.listeningPort)
     }
 
     public init(serverSocket: SSSocket, clientSocketHandlerManager: SocketHandlerManager) {

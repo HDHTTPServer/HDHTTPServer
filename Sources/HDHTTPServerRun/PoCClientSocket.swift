@@ -31,7 +31,7 @@ class PoCClientSocket: ClientSocket {
     var hostname: String {
         return "0.0.0.0"
     }
-    var port: Int32 {
+    var port: UInt16 {
         return listeningPort
     }
 
@@ -40,7 +40,7 @@ class PoCClientSocket: ClientSocket {
     }
 
     var socketfd: Int32 = -1
-    var listeningPort: Int32 = -1
+    var listeningPort: UInt16 = 0
     private(set) var isConnected = false
     private let isShuttingDown = Atomic<Bool>(false)
 

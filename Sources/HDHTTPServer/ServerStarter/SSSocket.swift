@@ -24,7 +24,7 @@ public enum SSSocketError: Error {
 
 public class SSSocket {
     public let socketfd: FileDescriptor
-    public let listeningPort: Port
+    public let listeningPort: UInt16
 
     public init?() {
         let env = ProcessInfo().environment
@@ -33,7 +33,7 @@ public class SSSocket {
             return nil
         }
 
-        guard let port = Port(value.components(separatedBy: "=")[0]) else {
+        guard let port = UInt16(value.components(separatedBy: "=")[0]) else {
             return nil
         }
 
@@ -45,7 +45,7 @@ public class SSSocket {
         self.listeningPort = port
     }
 
-    public init(fd: FileDescriptor, port: Port) {
+    public init(fd: FileDescriptor, port: UInt16) {
         self.socketfd = fd
         self.listeningPort = port
     }
