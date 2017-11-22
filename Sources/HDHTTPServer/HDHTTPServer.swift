@@ -96,6 +96,9 @@ public class HDHTTPServer<SocketHandlerManager: ClientSocketHandlerManager> {
                 self.clientSocketHandlerManager.add(handler: handler)
             } while !self.isShuttingDown.value
         }
+
+        let semaphore = DispatchSemaphore(value: 0)
+        semaphore.wait()
     }
 
     /// Stop the server and close the sockets
