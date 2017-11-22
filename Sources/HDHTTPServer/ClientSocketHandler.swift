@@ -8,8 +8,10 @@
 public protocol ClientSocketHandler: class {
     associatedtype Socket: ClientSocket
     var isOpen: Bool { get }
+    var isClosing: Bool { get }
     func handle(socket: Socket)
     func close()
     func closeIfIdleSocket()
+    func softClose()
     init()
 }
