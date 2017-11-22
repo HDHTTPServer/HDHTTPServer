@@ -44,7 +44,7 @@ public class HDHTTPServer<SocketHandlerManager: ClientSocketHandlerManager> {
     ///   - port: TCP port. See listen(2)
     ///   - handler: Function that creates the HTTP Response from the HTTP Request
     /// - Throws: Error (usually a socket error) generated
-    public func start(port: Int = 0,
+    public func start(port: UInt16 = 0,
                       queueCount: Int = 0,
                       acceptCount: Int = 0,
                       maxReadLength: Int = 1048576,
