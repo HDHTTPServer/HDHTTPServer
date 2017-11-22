@@ -80,24 +80,20 @@ public class HDHTTPServer<SocketHandlerManager: ClientSocketHandlerManager> {
 
         DispatchQueue.global().async {
             repeat {
-                do {
-                    let acceptedClientSocket: Socket? = try self.serverSocket.acceptClientConnection()
-                    guard let clientSocket = acceptedClientSocket else {
-                        if self.isShuttingDown.value {
-                            print("Received nil client socket - exiting accept loop")
-                        }
-                        break
+                let acceptedClientSocket: Socket? = self.clientSocketHandlerManager.acceptClientConnection(serverSocket: self.serverSocket)
+                guard let clientSocket = acceptedClientSocket else {
+                    if self.isShuttingDown.value {
+                        print("Received nil client socket - exiting accept loop")
                     }
-                    let handler = SocketHandler()
-                    acceptSemaphore.wait()
-                    acceptQueue.async { [weak handler] in
-                        handler?.handle(socket: clientSocket)
-                        acceptSemaphore.signal()
-                    }
-                    self.clientSocketHandlerManager.add(handler: handler)
-                } catch let error {
-                    print("Error accepting client connection: \(error)")
+                    break
                 }
+                let handler = SocketHandler()
+                acceptSemaphore.wait()
+                acceptQueue.async { [weak handler] in
+                    handler?.handle(socket: clientSocket)
+                    acceptSemaphore.signal()
+                }
+                self.clientSocketHandlerManager.add(handler: handler)
             } while !self.isShuttingDown.value
         }
     }

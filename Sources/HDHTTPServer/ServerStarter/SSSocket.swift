@@ -8,6 +8,12 @@
 import Foundation
 import Dispatch
 
+#if os(Linux)
+    @_exported import Glibc
+#else
+    @_exported import Darwin.C
+#endif
+
 public enum SSSocketError: Error {
     case SocketOSError(errno: Int32)
     case InvalidSSSocketError
@@ -17,7 +23,7 @@ public enum SSSocketError: Error {
 }
 
 public class SSSocket {
-    let socketfd: FileDescriptor
+    public let socketfd: FileDescriptor
     public let listeningPort: Port
 
     public init?() {
@@ -60,29 +66,5 @@ public class SSSocket {
         readBuffer.initialize(to: 0x0, count: maxLength)
 
         return recv(self.socketfd, readBuffer, maxLength, Int32(0))
-    }
-
-    func acceptClientConnection<Socket: ClientSocket>() throws -> Socket? {
-        var maxRetryCount = 100
-
-        var acceptFD: Int32 = -1
-        repeat {
-            var acceptAddr = sockaddr_in()
-            var addrSize = socklen_t(MemoryLayout<sockaddr_in>.size)
-
-            acceptFD = withUnsafeMutablePointer(to: &acceptAddr) { pointer in
-                return accept(self.socketfd, UnsafeMutableRawPointer(pointer).assumingMemoryBound(to: sockaddr.self), &addrSize)
-            }
-            if acceptFD < 0 && errno != EINTR {
-                maxRetryCount = maxRetryCount - 1
-                print("Could not accept on socket \(socketfd). Error is \(errno). Will retry.")
-            }
-        }
-            while acceptFD < 0 && maxRetryCount > 0
-
-        if acceptFD < 0 {
-            throw SSSocketError.SocketOSError(errno: errno)
-        }
-        return Socket(fd: acceptFD, isConnected: true)
     }
 }

@@ -8,6 +8,11 @@
 import Foundation
 import HDHTTPServer
 import Dispatch
+#if os(Linux)
+    @_exported import Glibc
+#else
+    @_exported import Darwin.C
+#endif
 
 final class PoCClientSocketHandleManager: ClientSocketHandlerManager {
     typealias Handler = PoCClientSocketHandler
@@ -30,5 +35,28 @@ final class PoCClientSocketHandleManager: ClientSocketHandlerManager {
     func prune() {
         //TODO
         closeAll()
+    }
+
+    func acceptClientConnection(serverSocket: SSSocket) -> PoCClientSocket? {
+        var maxRetryCount = 100
+
+        var acceptFD: Int32 = -1
+        repeat {
+            var acceptAddr = sockaddr_in()
+            var addrSize = socklen_t(MemoryLayout<sockaddr_in>.size)
+
+            acceptFD = withUnsafeMutablePointer(to: &acceptAddr) { pointer in
+                return accept(serverSocket.socketfd, UnsafeMutableRawPointer(pointer).assumingMemoryBound(to: sockaddr.self), &addrSize)
+            }
+            if acceptFD < 0 && errno != EINTR {
+                maxRetryCount = maxRetryCount - 1
+            }
+        }
+            while acceptFD < 0 && maxRetryCount > 0
+
+        if acceptFD < 0 {
+            fatalError()
+        }
+        return PoCClientSocket(fd: acceptFD, isConnected: true)
     }
 }

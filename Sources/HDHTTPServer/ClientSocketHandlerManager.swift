@@ -13,6 +13,8 @@ public protocol ClientSocketHandlerManager {
     func add(handler: Handler)
     func closeAll()
     func prune()
+    // FIXME: looks awful... will move to appropriate class.
+    func acceptClientConnection(serverSocket: SSSocket) -> Handler.Socket?
 }
 
 //FIXME: conform to `ClientSocketHandlerManager`
