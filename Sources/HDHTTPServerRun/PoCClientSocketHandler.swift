@@ -13,6 +13,8 @@ final class PoCClientSocketHandler: ClientSocketHandler {
     typealias Socket = PoCClientSocket
 
     private var socket: Socket? = nil
+    
+    var isClosing: Bool = false
 
     init() { }
 
@@ -63,5 +65,13 @@ hello world!
 
     func closeIfIdleSocket() {
         // do nothing
+    }
+
+    func softClose() {
+        if (isOpen) {
+            isClosing = true
+        } else {
+            close()
+        }
     }
 }
