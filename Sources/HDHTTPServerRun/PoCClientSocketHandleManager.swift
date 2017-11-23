@@ -26,6 +26,12 @@ final class PoCClientSocketHandleManager: ClientSocketHandlerManager {
     func add(handler: Handler) {
         handlers.append(handler)
     }
+    
+    func remove(handler: Handler) {
+        if let i = handlers.index(of: handler) {
+            handlers.remove(at: i)
+        }
+    }
 
     func closeAll() {
         handlers.forEach { h in

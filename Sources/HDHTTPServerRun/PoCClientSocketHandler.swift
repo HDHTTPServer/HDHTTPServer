@@ -9,17 +9,25 @@ import Foundation
 import HDHTTPServer
 import Dispatch
 
-final class PoCClientSocketHandler: ClientSocketHandler {
+final class PoCClientSocketHandler: ClientSocketHandler, Equatable {
     typealias Socket = PoCClientSocket
 
+    private let id: String;
+    
     private var socket: Socket? = nil
     
     var isClosing: Bool = false
-
-    init() { }
+    
+    init() {
+        self.id = NSUUID().uuidString
+    }
 
     var isOpen: Bool {
         return socket?.isConnected ?? false
+    }
+
+    static func ==(lhs: PoCClientSocketHandler, rhs: PoCClientSocketHandler) -> Bool {
+        return lhs.id == rhs.id
     }
 
     func handle(socket: Socket) {

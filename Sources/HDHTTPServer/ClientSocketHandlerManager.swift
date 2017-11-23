@@ -11,6 +11,7 @@ public protocol ClientSocketHandlerManager {
     associatedtype Handler: ClientSocketHandler
     var count: Int { get }
     func add(handler: Handler)
+    func remove(handler: Handler)
     func closeAll()
     func prune()
     // FIXME: looks awful... will move to appropriate class.
