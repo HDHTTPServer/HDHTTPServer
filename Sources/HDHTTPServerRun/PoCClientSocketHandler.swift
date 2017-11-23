@@ -74,10 +74,6 @@ hello world!
         done()
     }
 
-    func closeIfIdleSocket() {
-        // do nothing
-    }
-
     func softClose(done: () -> Void) {
         if (isOpen) {
             isClosing = true

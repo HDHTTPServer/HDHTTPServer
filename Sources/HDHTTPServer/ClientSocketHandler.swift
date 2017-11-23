@@ -11,7 +11,6 @@ public protocol ClientSocketHandler: class {
     func handle(socket: Socket) throws
     var isClosing: Bool { get }
     func close(done: () -> Void)
-    func closeIfIdleSocket()
     func softClose(done: () -> Void)
     init()
 }
