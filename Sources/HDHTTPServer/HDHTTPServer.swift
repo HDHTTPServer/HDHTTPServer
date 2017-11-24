@@ -97,7 +97,9 @@ public class HDHTTPServer<SocketHandlerManager: ClientSocketHandlerManager> {
                         print(error)
                     }
                     if let isOpen = handler?.isOpen, let isClosing = handler?.isClosing, isOpen && isClosing {
-                        handler?.close()
+                        handler?.close() {
+                            self.clientSocketHandlerManager.remove(handler: handler!)
+                        }
                     }
                     acceptSemaphore.signal()
                 }

@@ -62,24 +62,23 @@ hello world!
             }
         } catch {
             print("Received write socket error: \(error)")
-            close()
+            close() {
+                // TODO: Remove a handler from manager
+            }
         }
     }
 
-    func close() {
+    func close(done: () -> Void) {
         socket?.shutdownAndClose()
         socket = nil
+        done()
     }
 
-    func closeIfIdleSocket() {
-        // do nothing
-    }
-
-    func softClose() {
+    func softClose(done: () -> Void) {
         if (isOpen) {
             isClosing = true
         } else {
-            close()
+            close(done: done)
         }
     }
 }

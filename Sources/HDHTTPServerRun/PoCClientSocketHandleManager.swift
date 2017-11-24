@@ -35,7 +35,9 @@ final class PoCClientSocketHandleManager: ClientSocketHandlerManager {
 
     func closeAll() {
         handlers.forEach { h in
-            h.close()
+            h.close() {
+                self.remove(handler: h)
+            }
         }
     }
 
