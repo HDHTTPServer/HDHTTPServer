@@ -9,7 +9,7 @@ import Dispatch
 import Signals
 
 // For @convention closure.
-private var currentSocketHandlerManager: AnyClientSocketHandlerManager? = nil
+private var currentServer: AnyHDHTTPServer? = nil
 
 public class HDHTTPServer<SocketHandlerManager: ClientSocketHandlerManager> {
     typealias SocketHandler = SocketHandlerManager.Handler
@@ -50,18 +50,14 @@ public class HDHTTPServer<SocketHandlerManager: ClientSocketHandlerManager> {
                       maxReadLength: Int = 1048576,
                       keepAliveTimeout: Double = 5.0) throws {
 
-        currentSocketHandlerManager = AnyClientSocketHandlerManager(clientSocketHandlerManager)
+
+        currentServer = AnyHDHTTPServer(self)
 
         Signals.ignore(signal: .pipe)
 
         Signals.trap(signal: .term) { signal in
             print("Receive SIGTERM from start_server process.")
-            currentSocketHandlerManager?.closeAll() {
-                // FIXME: Call HDHTTPServer#stop instead of exit
-                print("Server is shutting down...")
-
-                exit(0)
-            }
+            currentServer?.stop()
         }
 
         if queueCount > 0 {
@@ -130,5 +126,18 @@ public class HDHTTPServer<SocketHandlerManager: ClientSocketHandlerManager> {
     /// Count the connections - can be used in XCTests
     public var connectionCount: Int {
         return clientSocketHandlerManager.count
+    }
+}
+
+// Type erasure for HDHTTPServer
+final class AnyHDHTTPServer {
+    private let _stop: () -> Void
+
+    init<Manager>(_ server: HDHTTPServer<Manager>) {
+        self._stop = server.stop
+    }
+
+    func stop() {
+        self.stop()
     }
 }

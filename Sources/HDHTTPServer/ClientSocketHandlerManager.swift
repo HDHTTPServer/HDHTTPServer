@@ -18,16 +18,3 @@ public protocol ClientSocketHandlerManager {
     // FIXME: looks awful... will move to appropriate class.
     func acceptClientConnection(serverSocket: SSSocket) -> Handler.Socket?
 }
-
-//FIXME: conform to `ClientSocketHandlerManager`
-final class AnyClientSocketHandlerManager {
-    private let _closeAll: (() -> Void) -> Void
-
-    init<Manager: ClientSocketHandlerManager>(_ manager: Manager) {
-        self._closeAll = manager.closeAll
-    }
-
-    func closeAll(done: () -> Void) {
-        self._closeAll(done)
-    }
-}
