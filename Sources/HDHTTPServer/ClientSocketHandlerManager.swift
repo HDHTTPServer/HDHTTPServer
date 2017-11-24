@@ -13,7 +13,7 @@ public protocol ClientSocketHandlerManager {
     func add(handler: Handler)
     func remove(handler: Handler)
     func fetchIdleHandler() -> Handler
-    func closeAll()
+    func closeAll(done: () -> Void)
     func prune()
     // FIXME: looks awful... will move to appropriate class.
     func acceptClientConnection(serverSocket: SSSocket) -> Handler.Socket?
@@ -21,13 +21,13 @@ public protocol ClientSocketHandlerManager {
 
 //FIXME: conform to `ClientSocketHandlerManager`
 final class AnyClientSocketHandlerManager {
-    private let _closeAll: () -> Void
+    private let _closeAll: (() -> Void) -> Void
 
     init<Manager: ClientSocketHandlerManager>(_ manager: Manager) {
         self._closeAll = manager.closeAll
     }
 
-    func closeAll() {
-        self._closeAll()
+    func closeAll(done: () -> Void) {
+        self._closeAll(done)
     }
 }

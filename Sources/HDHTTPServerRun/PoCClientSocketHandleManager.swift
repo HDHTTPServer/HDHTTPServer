@@ -49,17 +49,24 @@ final class PoCClientSocketHandleManager: ClientSocketHandlerManager {
         fatalError("No idle handlers")
     }
 
-    func closeAll() {
+    func closeAll(done: () -> Void) {
         handlers.forEach { h in
-            h.close() {
+            h.softClose() {
                 self.remove(handler: h)
+
+                print("Handler is shutting down... (id: \(h.id))")
+
+
+                if self.handlers.count <= 0 {
+                    done()
+                }
             }
         }
     }
 
     func prune() {
         //TODO
-        closeAll()
+        closeAll() { }
     }
 
     func acceptClientConnection(serverSocket: SSSocket) -> PoCClientSocket? {
