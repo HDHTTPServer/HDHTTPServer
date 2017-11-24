@@ -91,16 +91,17 @@ public class HDHTTPServer<SocketHandlerManager: ClientSocketHandlerManager> {
                 acceptSemaphore.wait()
                 acceptQueue.async { [weak handler] in
                     do {
+                        defer {
+                            handler?.close() {
+                                self.clientSocketHandlerManager.remove(handler: handler!)
+                            }
+                        }
                         try handler?.handle(socket: clientSocket)
                     }
                     catch {
                         print(error)
                     }
-                    if let isOpen = handler?.isOpen, let isClosing = handler?.isClosing, isOpen && isClosing {
-                        handler?.close() {
-                            self.clientSocketHandlerManager.remove(handler: handler!)
-                        }
-                    }
+
                     acceptSemaphore.signal()
                 }
                 self.clientSocketHandlerManager.add(handler: handler)
