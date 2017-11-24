@@ -138,6 +138,6 @@ final class AnyHDHTTPServer {
     }
 
     func stop() {
-        self.stop()
+        self._stop()
     }
 }
