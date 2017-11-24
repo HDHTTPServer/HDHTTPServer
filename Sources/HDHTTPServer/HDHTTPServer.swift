@@ -56,9 +56,12 @@ public class HDHTTPServer<SocketHandlerManager: ClientSocketHandlerManager> {
 
         Signals.trap(signal: .term) { signal in
             print("Receive SIGTERM from start_server process.")
-            currentSocketHandlerManager?.closeAll()
-            //FIXME: Not graceful yet. Call exit(0) after all processes are shut down
-            exit(0)
+            currentSocketHandlerManager?.closeAll() {
+                // FIXME: Call HDHTTPServer#stop instead of exit
+                print("Server is shutting down...")
+
+                exit(0)
+            }
         }
 
         if queueCount > 0 {
@@ -117,7 +120,11 @@ public class HDHTTPServer<SocketHandlerManager: ClientSocketHandlerManager> {
     /// Stop the server and close the sockets
     public func stop() {
         isShuttingDown.value = true
-        clientSocketHandlerManager.closeAll()
+        clientSocketHandlerManager.closeAll() {
+            print("Server is shutting down...")
+            // FIXME: Not graceful yet.  Enable shutdown flag
+            exit(0)
+        }
     }
 
     /// Count the connections - can be used in XCTests

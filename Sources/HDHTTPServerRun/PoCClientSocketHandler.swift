@@ -12,7 +12,7 @@ import Dispatch
 final class PoCClientSocketHandler: ClientSocketHandler, Equatable {
     typealias Socket = PoCClientSocket
 
-    private let id: String;
+    let id: String
     
     private var socket: Socket? = nil
     
