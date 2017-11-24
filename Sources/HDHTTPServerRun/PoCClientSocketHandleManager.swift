@@ -32,6 +32,22 @@ final class PoCClientSocketHandleManager: ClientSocketHandlerManager {
             handlers.remove(at: i)
         }
     }
+    
+    func fetchIdleHandler() -> Handler {
+        var maxRetryCount = 100
+
+        repeat {
+            if let idleHandler = handlers.first(where: { $0.isIdle }) {
+                return idleHandler
+            }
+
+            usleep(10_000)  // sleep 10 msec
+
+            maxRetryCount = maxRetryCount - 1
+        } while maxRetryCount > 0
+
+        fatalError("No idle handlers")
+    }
 
     func closeAll() {
         handlers.forEach { h in
