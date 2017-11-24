@@ -68,8 +68,13 @@ public class HDHTTPServer<SocketHandlerManager: ClientSocketHandlerManager> {
             acceptMax = acceptCount
         }
 
+        Array(0..<acceptMax).forEach { _ in
+            self.clientSocketHandlerManager.add(handler: SocketHandler())
+        }
+
         pruneSocketTimer.setEventHandler { [weak self] in
-            self?.clientSocketHandlerManager.prune()
+            // FIXME
+            // self?.clientSocketHandlerManager.prune()
         }
         pruneSocketTimer.schedule(deadline: .now() + keepAliveTimeout,
                                   repeating: .seconds(Int(keepAliveTimeout)))
@@ -87,14 +92,12 @@ public class HDHTTPServer<SocketHandlerManager: ClientSocketHandlerManager> {
                     }
                     break
                 }
-                let handler = SocketHandler()
+                let handler = self.clientSocketHandlerManager.fetchIdleHandler();
                 acceptSemaphore.wait()
                 acceptQueue.async { [weak handler] in
                     do {
                         defer {
-                            handler?.close() {
-                                self.clientSocketHandlerManager.remove(handler: handler!)
-                            }
+                            handler?.close() { }
                         }
                         try handler?.handle(socket: clientSocket)
                     }
@@ -104,7 +107,6 @@ public class HDHTTPServer<SocketHandlerManager: ClientSocketHandlerManager> {
 
                     acceptSemaphore.signal()
                 }
-                self.clientSocketHandlerManager.add(handler: handler)
             } while !self.isShuttingDown.value
         }
 

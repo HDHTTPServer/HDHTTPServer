@@ -22,6 +22,10 @@ final class PoCClientSocketHandler: ClientSocketHandler, Equatable {
         self.id = NSUUID().uuidString
     }
 
+    var isIdle: Bool {
+        return !isOpen;
+    }
+
     var isOpen: Bool {
         return socket?.isConnected ?? false
     }
